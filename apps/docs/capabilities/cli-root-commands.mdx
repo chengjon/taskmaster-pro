@@ -1,0 +1,209 @@
+---
+title: CLI Commands
+sidebarTitle: "CLI Commands"
+---
+
+
+<AccordionGroup>
+  <Accordion title="Parse PRD">
+    ```bash
+    # Parse a PRD file and generate tasks
+    TAMP parse-prd <prd-file.txt>
+
+    # Limit the number of tasks generated
+    TAMP parse-prd <prd-file.txt> --num-tasks=10
+    ```
+  </Accordion>
+
+  <Accordion title="List Tasks">
+    ```bash
+    # List all tasks
+    TAMP list
+
+    # List tasks with a specific status
+    TAMP list --status=<status>
+
+    # List tasks with subtasks
+    TAMP list --with-subtasks
+
+    # List tasks with a specific status and include subtasks
+    TAMP list --status=<status> --with-subtasks
+    ```
+  </Accordion>
+
+  <Accordion title="Show Next Task">
+    ```bash
+    # Show the next task to work on based on dependencies and status
+    TAMP next
+    ```
+  </Accordion>
+
+  <Accordion title="Show Specific Task">
+    ```bash
+    # Show details of a specific task
+    TAMP show <id>
+    # or
+    TAMP show --id=<id>
+
+    # View a specific subtask (e.g., subtask 2 of task 1)
+    TAMP show 1.2
+    ```
+  </Accordion>
+
+  <Accordion title="Update Tasks">
+    ```bash
+    # Update tasks from a specific ID and provide context
+    TAMP update --from=<id> --prompt="<prompt>"
+    ```
+  </Accordion>
+
+  <Accordion title="Update a Specific Task">
+    ```bash
+    # Update a single task by ID with new information
+    TAMP update-task --id=<id> --prompt="<prompt>"
+
+    # Use research-backed updates with Perplexity AI
+    TAMP update-task --id=<id> --prompt="<prompt>" --research
+    ```
+  </Accordion>
+
+  <Accordion title="Update a Subtask">
+    ```bash
+    # Append additional information to a specific subtask
+    TAMP update-subtask --id=<parentId.subtaskId> --prompt="<prompt>"
+
+    # Example: Add details about API rate limiting to subtask 2 of task 5
+    TAMP update-subtask --id=5.2 --prompt="Add rate limiting of 100 requests per minute"
+
+    # Use research-backed updates with Perplexity AI
+    TAMP update-subtask --id=<parentId.subtaskId> --prompt="<prompt>" --research
+    ```
+
+    Unlike the `update-task` command which replaces task information, the `update-subtask` command _appends_ new information to the existing subtask details, marking it with a timestamp. This is useful for iteratively enhancing subtasks while preserving the original content.
+  </Accordion>
+
+  <Accordion title="Generate Task Files">
+    ```bash
+    # Generate individual task files from tasks.json
+    TAMP generate
+    ```
+  </Accordion>
+
+  <Accordion title="Set Task Status">
+    ```bash
+    # Set status of a single task
+    TAMP set-status --id=<id> --status=<status>
+
+    # Set status for multiple tasks
+    TAMP set-status --id=1,2,3 --status=<status>
+
+    # Set status for subtasks
+    TAMP set-status --id=1.1,1.2 --status=<status>
+    ```
+
+    When marking a task as "done", all of its subtasks will automatically be marked as "done" as well.
+  </Accordion>
+
+  <Accordion title="Expand Tasks">
+    ```bash
+    # Expand a specific task with subtasks
+    TAMP expand --id=<id> --num=<number>
+
+    # Expand with additional context
+    TAMP expand --id=<id> --prompt="<context>"
+
+    # Expand all pending tasks
+    TAMP expand --all
+
+    # Force regeneration of subtasks for tasks that already have them
+    TAMP expand --all --force
+
+    # Research-backed subtask generation for a specific task
+    TAMP expand --id=<id> --research
+
+    # Research-backed generation for all tasks
+    TAMP expand --all --research
+    ```
+  </Accordion>
+
+  <Accordion title="Clear Subtasks">
+    ```bash
+    # Clear subtasks from a specific task
+    TAMP clear-subtasks --id=<id>
+
+    # Clear subtasks from multiple tasks
+    TAMP clear-subtasks --id=1,2,3
+
+    # Clear subtasks from all tasks
+    TAMP clear-subtasks --all
+    ```
+  </Accordion>
+
+  <Accordion title="Analyze Task Complexity">
+    ```bash
+    # Analyze complexity of all tasks
+    TAMP analyze-complexity
+
+    # Save report to a custom location
+    TAMP analyze-complexity --output=my-report.json
+
+    # Use a specific LLM model
+    TAMP analyze-complexity --model=claude-3-opus-20240229
+
+    # Set a custom complexity threshold (1-10)
+    TAMP analyze-complexity --threshold=6
+
+    # Use an alternative tasks file
+    TAMP analyze-complexity --file=custom-tasks.json
+
+    # Use your configured research model for research-backed complexity analysis
+    TAMP analyze-complexity --research
+    ```
+  </Accordion>
+
+  <Accordion title="View Complexity Report">
+    ```bash
+    # Display the task complexity analysis report
+    TAMP complexity-report
+
+    # View a report at a custom location
+    TAMP complexity-report --file=my-report.json
+    ```
+  </Accordion>
+
+  <Accordion title="Managing Task Dependencies">
+    ```bash
+    # Add a dependency to a task
+    TAMP add-dependency --id=<id> --depends-on=<id>
+
+    # Remove a dependency from a task
+    TAMP remove-dependency --id=<id> --depends-on=<id>
+
+    # Validate dependencies without fixing them
+    TAMP validate-dependencies
+
+    # Find and fix invalid dependencies automatically
+    TAMP fix-dependencies
+    ```
+  </Accordion>
+
+  <Accordion title="Add a New Task">
+    ```bash
+    # Add a new task using AI
+    TAMP add-task --prompt="Description of the new task"
+
+    # Add a task with dependencies
+    TAMP add-task --prompt="Description" --dependencies=1,2,3
+
+    # Add a task with priority
+    TAMP add-task --prompt="Description" --priority=high
+    ```
+  </Accordion>
+
+  <Accordion title="Initialize a Project">
+    ```bash
+    # Initialize a new project with Task Master structure
+    TAMP init
+    ```
+  </Accordion>
+</AccordionGroup>

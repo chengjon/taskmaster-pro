@@ -1,0 +1,9 @@
+{
+	"mcpServers": {
+		"taskmaster-pro": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "taskmaster-pro"]
+		}
+	}
+}
