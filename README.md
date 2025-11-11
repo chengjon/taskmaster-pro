@@ -5,10 +5,9 @@
 <p align="center">
 <b>A professional task management system for AI-driven development</b>
 
+</p>
 
 ---
-
-Task Master Pro (TAMP): A professional task management system for AI-driven development, designed to work seamlessly with any AI chat interface.
 
 ## 🚀 About This Project
 
@@ -53,12 +52,12 @@ The following documentation is also available in the repository:
 For Claude Code users:
 
 ```bash
-claude mcp add taskmaster-ai -- npx -y taskmaster-pro
+claude mcp add taskmaster-pro -- npx -y taskmaster-pro
 ```
 
 Don't forget to add your API keys to the configuration:
 - in the root .env of your Project
-- in the "env" section of your mcp config for taskmaster-ai
+- in the "env" section of your mcp config for taskmaster-pro
 
 
 ## Requirements
@@ -181,7 +180,7 @@ Change the main model to claude-code/sonnet
 In your editor's AI chat pane, say:
 
 ```txt
-Initialize taskmaster-ai in my project
+Initialize Task Master Pro in my project
 ```
 
 #### 5. Make sure you have a PRD (Recommended)
