@@ -9,8 +9,8 @@ jspm_packages/
 .env.test.local
 .env.production.local
 
-# Cursor configuration -- might have ENV variables. Included by default
-# .cursor/mcp.json
+# Cursor configuration -- tracked to share with team
+# .cursor/ is tracked (includes mcp.json, rules, etc)
 
 # Logs
 logs
