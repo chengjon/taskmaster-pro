@@ -34,7 +34,7 @@ export default defineConfig(
 	mergeConfig(baseConfig, {
 		entry: {
 			'task-master': 'scripts/dev.js',
-			'mcp-server': 'mcp-server/server.js'
+			'mcp-server': 'apps/mcp/src/index.ts'
 		},
 		outDir: 'dist',
 		copy: ['assets'],
