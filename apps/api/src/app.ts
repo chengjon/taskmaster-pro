@@ -6,17 +6,19 @@
 
 import express, { type Express } from 'express';
 import cors from 'cors';
+import type { TmCore } from '@tm/core';
 import {
 	authMiddleware,
 	optionalAuthMiddleware
 } from './middleware/auth.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { requestLoggerMiddleware } from './middleware/request-logger.js';
+import { createTaskRouter } from './routes/tasks.routes.js';
 
 /**
  * Create and configure Express application
  */
-export function createApp(): Express {
+export function createApp(tmCore?: TmCore): Express {
 	const app = express();
 
 	// === Global Middleware ===
@@ -69,15 +71,10 @@ export function createApp(): Express {
 	// Protected routes (require auth)
 	app.use('/api/v1', authMiddleware);
 
-	// Placeholder for actual routes
-	// These will be populated in Phase 1.2
-	app.get('/api/v1/tasks', (req, res) => {
-		res.json({
-			success: true,
-			data: [],
-			message: 'Tasks API - Coming soon in Phase 1.2'
-		});
-	});
+	// Task management routes
+	// In development/testing, routes work even without tmCore (uses mock data)
+	const mockTmCore = tmCore || ({} as any);
+	app.use('/api/v1/tasks', createTaskRouter(mockTmCore));
 
 	// === Error Handling ===
 

@@ -12,8 +12,22 @@ import { logger } from './middleware/request-logger.js';
  */
 async function startServer(): Promise<void> {
 	try {
-		// Create Express app
-		const app = createApp();
+		// Initialize TmCore (optional for Phase 1.2)
+		// In Phase 1.3, this will be fully integrated
+		let tmCore: any = undefined;
+
+		try {
+			// Try to import and create TmCore if available
+			const { createTmCore } = await import('@tm/core');
+			tmCore = await createTmCore({ projectPath: process.cwd() });
+			logger.info('TmCore initialized successfully');
+		} catch (error) {
+			logger.warn('TmCore initialization failed, running in limited mode');
+			// Continue with undefined tmCore - controllers will use mock data
+		}
+
+		// Create Express app with optional tmCore
+		const app = createApp(tmCore);
 
 		// Start listening
 		const server = app.listen(appConfig.port, () => {
@@ -21,7 +35,8 @@ async function startServer(): Promise<void> {
 				{
 					port: appConfig.port,
 					nodeEnv: appConfig.nodeEnv,
-					timestamp: new Date().toISOString()
+					timestamp: new Date().toISOString(),
+					tmCoreReady: !!tmCore
 				},
 				`Task Master Pro API Server started`
 			);
