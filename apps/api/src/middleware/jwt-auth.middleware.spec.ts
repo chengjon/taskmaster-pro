@@ -49,6 +49,73 @@ const validPayload = {
 };
 
 describe('JWT Authentication Middleware', () => {
+	describe('Token Caching', () => {
+		it('should cache verified tokens and return cached result', () => {
+			const token = sign(validPayload, testSecret, {
+				algorithm: 'HS256',
+				issuer: 'supabase',
+				audience: 'authenticated'
+			});
+
+			// First verification (cache miss) - pass secret explicitly
+			const payload1 = verifyJwtToken(token, testSecret);
+			expect(payload1).toBeDefined();
+			expect(payload1?.sub).toBe('user-123');
+
+			// Second verification (cache hit)
+			const payload2 = verifyJwtToken(token, testSecret);
+			expect(payload2).toBeDefined();
+			expect(payload2?.sub).toBe('user-123');
+			expect(payload1).toEqual(payload2);
+		});
+
+		it('should respect token expiration when caching', async () => {
+			// Create a token that expires in 1 second
+			const shortLivedPayload = {
+				...validPayload,
+				exp: Math.floor(Date.now() / 1000) + 1
+			};
+
+			const token = sign(shortLivedPayload, testSecret, {
+				algorithm: 'HS256',
+				issuer: 'supabase',
+				audience: 'authenticated'
+			});
+
+			// First verification (should succeed)
+			const payload1 = verifyJwtToken(token, testSecret);
+			expect(payload1).toBeDefined();
+
+			// Wait for expiration
+			await new Promise(resolve => setTimeout(resolve, 1100));
+
+			// Second verification (should fail due to expiration)
+			const payload2 = verifyJwtToken(token, testSecret);
+			expect(payload2).toBeNull();
+		});
+
+		it('should handle multiple different tokens', () => {
+			const token1 = sign({ ...validPayload, sub: 'user-1' }, testSecret, {
+				algorithm: 'HS256',
+				issuer: 'supabase',
+				audience: 'authenticated'
+			});
+
+			const token2 = sign({ ...validPayload, sub: 'user-2' }, testSecret, {
+				algorithm: 'HS256',
+				issuer: 'supabase',
+				audience: 'authenticated'
+			});
+
+			const payload1 = verifyJwtToken(token1, testSecret);
+			const payload2 = verifyJwtToken(token2, testSecret);
+
+			expect(payload1?.sub).toBe('user-1');
+			expect(payload2?.sub).toBe('user-2');
+			expect(payload1).not.toEqual(payload2);
+		});
+	});
+
 	describe('extractBearerToken', () => {
 		it('should extract bearer token from Authorization header', () => {
 			const authHeader = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
