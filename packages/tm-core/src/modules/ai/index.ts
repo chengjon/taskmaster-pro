@@ -1,9 +1,15 @@
 /**
- * @fileoverview Barrel export for provider modules
+ * @fileoverview Barrel export for AI module
  */
 
-// Export all from AI module
-export * from './providers/index.js';
+// Domain facade
+export { AIDomain } from './ai-domain.js';
 
-// Storage providers will be exported here when implemented
-// export * from './storage/index.js';
+// Interfaces
+export type { IAIProvider, AIProviderConfig } from './interfaces/provider.interface.js';
+
+// Services
+export { ProviderFactory } from './services/provider-factory.js';
+
+// Providers
+export * from './providers/index.js';
