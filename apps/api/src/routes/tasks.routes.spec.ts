@@ -7,7 +7,10 @@
 import request from 'supertest';
 import { sign } from 'jsonwebtoken';
 import { createApp } from '../app.js';
+import { cacheStore } from '../middleware/cache.middleware.js';
+import { clearTokenCache } from '../middleware/jwt-auth.middleware.js';
 import type { Express } from 'express';
+import { beforeEach } from 'vitest';
 
 // Generate valid JWT token for testing
 function generateTestToken() {
@@ -34,6 +37,12 @@ describe('Task Routes - Integration Tests', () => {
 		// Create app without tmCore (uses mock data)
 		app = createApp();
 		testToken = generateTestToken();
+	});
+
+	beforeEach(() => {
+		// Clear all global state before each test to prevent state pollution
+		cacheStore.clear();
+		clearTokenCache();
 	});
 
 	describe('POST /api/v1/tasks - Create Task', () => {

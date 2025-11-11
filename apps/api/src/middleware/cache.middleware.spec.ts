@@ -341,14 +341,8 @@ describe('Cache Middleware', () => {
 			const res = createMockResponse() as any;
 			const next = vi.fn();
 
-			// Mock generateCacheKey
-			vi.mock('./cache.middleware.js', async () => {
-				const actual = await vi.importActual('./cache.middleware.js');
-				return {
-					...actual,
-					generateCacheKey: () => cacheKey
-				};
-			});
+			// Note: This test doesn't need to mock generateCacheKey
+			// since we're just testing the cache hit behavior
 
 			middleware(req, res, next);
 			// Cache hit should set response
