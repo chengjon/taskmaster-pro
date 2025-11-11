@@ -4,7 +4,7 @@
  * Tests for JWT verification and authentication middleware
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { sign } from 'jsonwebtoken';
 import type { Request, Response, NextFunction } from 'express';
 import {
@@ -14,7 +14,8 @@ import {
 	decodeJwtToken,
 	extractBearerToken,
 	jwtConfig,
-	requireRole
+	requireRole,
+	clearTokenCache
 } from './jwt-auth.middleware.js';
 
 // Mock response helpers
@@ -49,6 +50,10 @@ const validPayload = {
 };
 
 describe('JWT Authentication Middleware', () => {
+	// Clear token cache before each test to prevent cache pollution
+	beforeEach(() => {
+		clearTokenCache();
+	});
 	describe('Token Caching', () => {
 		it('should cache verified tokens and return cached result', () => {
 			const token = sign(validPayload, testSecret, {

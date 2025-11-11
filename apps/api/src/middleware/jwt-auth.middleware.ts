@@ -28,18 +28,31 @@ interface SupabaseJwtPayload extends JwtPayload {
 
 /**
  * JWT configuration
+ *
+ * NOTE: Secret is retrieved dynamically at runtime rather than at module load time
+ * to allow tests to change process.env.SUPABASE_JWT_SECRET without requiring module reload
  */
 export const jwtConfig = {
-	// Supabase JWT secret from environment
-	secret: process.env.SUPABASE_JWT_SECRET || 'dev-secret-key',
+	// Supabase JWT secret from environment (lazily evaluated)
+	get secret(): string {
+		return process.env.SUPABASE_JWT_SECRET || 'dev-secret-key';
+	},
 	// Supabase anon key can be used as alternative
-	anonKey: process.env.SUPABASE_ANON_KEY,
+	get anonKey(): string | undefined {
+		return process.env.SUPABASE_ANON_KEY;
+	},
 	// Token issuer
-	issuer: process.env.JWT_ISSUER || 'supabase',
+	get issuer(): string {
+		return process.env.JWT_ISSUER || 'supabase';
+	},
 	// Token audience
-	audience: process.env.JWT_AUDIENCE || 'authenticated',
+	get audience(): string {
+		return process.env.JWT_AUDIENCE || 'authenticated';
+	},
 	// Token cache TTL (5 minutes)
-	cacheTtl: parseInt(process.env.JWT_CACHE_TTL || '300000', 10)
+	get cacheTtl(): number {
+		return parseInt(process.env.JWT_CACHE_TTL || '300000', 10);
+	}
 };
 
 /**
@@ -56,6 +69,14 @@ interface CachedToken {
  * This provides ~30-40% performance improvement for repeated requests
  */
 const tokenCache = new Map<string, CachedToken>();
+
+/**
+ * Clear the token cache (for testing purposes)
+ * This is exported to allow tests to reset state between test cases
+ */
+export function clearTokenCache(): void {
+	tokenCache.clear();
+}
 
 /**
  * Clear expired tokens from cache (automatic cleanup)
