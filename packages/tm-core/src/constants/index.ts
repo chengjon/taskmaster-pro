@@ -1,15 +1,24 @@
 /**
  * @fileoverview Constants Barrel Export
  *
- * Central export point for all application constants.
- * This file will re-export all constants from the migration of src/constants/*.js
+ * Central export point for all application constants
+ * Re-exports all migrated constants from src/constants/
  */
 
-// Placeholder for constants that will be migrated in Task 1.2
-// When migration is complete, this will export:
-// export * from './commands.js';
-// export * from './paths.js';
-// export * from './profiles.js';
-// export * from './rules-actions.js';
-// export * from './task-priority.js';
-// export * from './task-status.js';
+// Task status constants
+export * from './task-status.js';
+
+// Task priority constants
+export * from './task-priority.js';
+
+// Command constants
+export * from './commands.js';
+
+// Path constants
+export * from './paths.js';
+
+// Rules profile constants
+export * from './profiles.js';
+
+// Rules action constants
+export * from './rules-actions.js';
