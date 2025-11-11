@@ -5,15 +5,35 @@
  */
 
 import request from 'supertest';
+import { sign } from 'jsonwebtoken';
 import { createApp } from '../app.js';
 import type { Express } from 'express';
 
+// Generate valid JWT token for testing
+function generateTestToken() {
+	const payload = {
+		sub: 'test-user-123',
+		email: 'test@example.com',
+		role: 'user'
+	};
+	const secret = process.env.SUPABASE_JWT_SECRET || 'dev-secret-key';
+	const token = sign(payload, secret, {
+		algorithm: 'HS256',
+		issuer: 'supabase',
+		audience: 'authenticated',
+		expiresIn: '1h'
+	});
+	return token;
+}
+
 describe('Task Routes - Integration Tests', () => {
 	let app: Express;
+	let testToken: string;
 
 	beforeAll(() => {
 		// Create app without tmCore (uses mock data)
 		app = createApp();
+		testToken = generateTestToken();
 	});
 
 	describe('POST /api/v1/tasks - Create Task', () => {
@@ -27,7 +47,7 @@ describe('Task Routes - Integration Tests', () => {
 
 			const response = await request(app)
 				.post('/api/v1/tasks')
-				.set('Authorization', 'Bearer test-token')
+				.set('Authorization', `Bearer ${testToken}`)
 				.send(newTask);
 
 			expect(response.status).toBe(201);
@@ -45,7 +65,7 @@ describe('Task Routes - Integration Tests', () => {
 
 			const response = await request(app)
 				.post('/api/v1/tasks')
-				.set('Authorization', 'Bearer test-token')
+				.set('Authorization', `Bearer ${testToken}`)
 				.send(invalidTask);
 
 			expect(response.status).toBe(400);
@@ -60,7 +80,7 @@ describe('Task Routes - Integration Tests', () => {
 
 			const response = await request(app)
 				.post('/api/v1/tasks')
-				.set('Authorization', 'Bearer test-token')
+				.set('Authorization', `Bearer ${testToken}`)
 				.send(invalidTask);
 
 			expect(response.status).toBe(400);
@@ -74,7 +94,7 @@ describe('Task Routes - Integration Tests', () => {
 
 			const response = await request(app)
 				.post('/api/v1/tasks')
-				.set('Authorization', 'Bearer test-token')
+				.set('Authorization', `Bearer ${testToken}`)
 				.send(minimalTask);
 
 			expect(response.status).toBe(201);
@@ -99,7 +119,7 @@ describe('Task Routes - Integration Tests', () => {
 		it('should return empty task list with pagination info', async () => {
 			const response = await request(app)
 				.get('/api/v1/tasks')
-				.set('Authorization', 'Bearer test-token');
+				.set('Authorization', `Bearer ${testToken}`);
 
 			expect(response.status).toBe(200);
 			expect(response.body.success).toBe(true);
@@ -113,7 +133,7 @@ describe('Task Routes - Integration Tests', () => {
 		it('should support pagination with limit and offset', async () => {
 			const response = await request(app)
 				.get('/api/v1/tasks?limit=50&offset=10')
-				.set('Authorization', 'Bearer test-token');
+				.set('Authorization', `Bearer ${testToken}`);
 
 			expect(response.status).toBe(200);
 			expect(response.body.data.limit).toBe(50);
@@ -123,7 +143,7 @@ describe('Task Routes - Integration Tests', () => {
 		it('should filter by status', async () => {
 			const response = await request(app)
 				.get('/api/v1/tasks?status=in-progress')
-				.set('Authorization', 'Bearer test-token');
+				.set('Authorization', `Bearer ${testToken}`);
 
 			expect(response.status).toBe(200);
 			expect(response.body.success).toBe(true);
@@ -132,7 +152,7 @@ describe('Task Routes - Integration Tests', () => {
 		it('should filter by priority', async () => {
 			const response = await request(app)
 				.get('/api/v1/tasks?priority=high')
-				.set('Authorization', 'Bearer test-token');
+				.set('Authorization', `Bearer ${testToken}`);
 
 			expect(response.status).toBe(200);
 			expect(response.body.success).toBe(true);
@@ -141,7 +161,7 @@ describe('Task Routes - Integration Tests', () => {
 		it('should support sorting by different fields', async () => {
 			const response = await request(app)
 				.get('/api/v1/tasks?sortBy=dueDate&sortOrder=asc')
-				.set('Authorization', 'Bearer test-token');
+				.set('Authorization', `Bearer ${testToken}`);
 
 			expect(response.status).toBe(200);
 			expect(response.body.success).toBe(true);
@@ -159,7 +179,7 @@ describe('Task Routes - Integration Tests', () => {
 		it('should return a task by ID', async () => {
 			const response = await request(app)
 				.get('/api/v1/tasks/task-123')
-				.set('Authorization', 'Bearer test-token');
+				.set('Authorization', `Bearer ${testToken}`);
 
 			expect(response.status).toBe(200);
 			expect(response.body.success).toBe(true);
@@ -184,7 +204,7 @@ describe('Task Routes - Integration Tests', () => {
 
 			const response = await request(app)
 				.patch('/api/v1/tasks/task-123')
-				.set('Authorization', 'Bearer test-token')
+				.set('Authorization', `Bearer ${testToken}`)
 				.send(updates);
 
 			expect(response.status).toBe(200);
@@ -197,7 +217,7 @@ describe('Task Routes - Integration Tests', () => {
 
 			const response = await request(app)
 				.patch('/api/v1/tasks/task-123')
-				.set('Authorization', 'Bearer test-token')
+				.set('Authorization', `Bearer ${testToken}`)
 				.send(updates);
 
 			expect(response.status).toBe(200);
@@ -218,7 +238,7 @@ describe('Task Routes - Integration Tests', () => {
 		it('should delete a task by ID', async () => {
 			const response = await request(app)
 				.delete('/api/v1/tasks/task-123')
-				.set('Authorization', 'Bearer test-token');
+				.set('Authorization', `Bearer ${testToken}`);
 
 			expect(response.status).toBe(200);
 			expect(response.body.success).toBe(true);
@@ -237,7 +257,7 @@ describe('Task Routes - Integration Tests', () => {
 		it('should return subtasks of a task', async () => {
 			const response = await request(app)
 				.get('/api/v1/tasks/task-123/subtasks')
-				.set('Authorization', 'Bearer test-token');
+				.set('Authorization', `Bearer ${testToken}`);
 
 			expect(response.status).toBe(200);
 			expect(response.body.success).toBe(true);
@@ -262,7 +282,7 @@ describe('Task Routes - Integration Tests', () => {
 
 			const response = await request(app)
 				.post('/api/v1/tasks/task-123/subtasks')
-				.set('Authorization', 'Bearer test-token')
+				.set('Authorization', `Bearer ${testToken}`)
 				.send(subtaskData);
 
 			expect(response.status).toBe(201);
@@ -292,7 +312,7 @@ describe('Task Routes - Integration Tests', () => {
 
 			const response = await request(app)
 				.post('/api/v1/tasks/batch/create')
-				.set('Authorization', 'Bearer test-token')
+				.set('Authorization', `Bearer ${testToken}`)
 				.send(batchData);
 
 			expect(response.status).toBe(201);
@@ -306,7 +326,7 @@ describe('Task Routes - Integration Tests', () => {
 
 			const response = await request(app)
 				.post('/api/v1/tasks/batch/create')
-				.set('Authorization', 'Bearer test-token')
+				.set('Authorization', `Bearer ${testToken}`)
 				.send(invalidBatch);
 
 			expect(response.status).toBe(400);
@@ -334,7 +354,7 @@ describe('Task Routes - Integration Tests', () => {
 
 			const response = await request(app)
 				.patch('/api/v1/tasks/batch/update')
-				.set('Authorization', 'Bearer test-token')
+				.set('Authorization', `Bearer ${testToken}`)
 				.send(batchData);
 
 			expect(response.status).toBe(200);
@@ -362,7 +382,7 @@ describe('Task Routes - Integration Tests', () => {
 
 			const response = await request(app)
 				.delete('/api/v1/tasks/batch/delete')
-				.set('Authorization', 'Bearer test-token')
+				.set('Authorization', `Bearer ${testToken}`)
 				.send(batchData);
 
 			expect(response.status).toBe(200);
@@ -384,7 +404,7 @@ describe('Task Routes - Integration Tests', () => {
 		it('should return 404 for non-existent routes', async () => {
 			const response = await request(app)
 				.get('/api/v1/nonexistent')
-				.set('Authorization', 'Bearer test-token');
+				.set('Authorization', `Bearer ${testToken}`);
 
 			expect(response.status).toBe(404);
 			expect(response.body.success).toBe(false);

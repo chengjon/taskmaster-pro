@@ -13,6 +13,14 @@ import {
 } from './middleware/auth.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { requestLoggerMiddleware } from './middleware/request-logger.js';
+import { jwtAuthMiddleware, optionalJwtAuthMiddleware } from './middleware/jwt-auth.middleware.js';
+import {
+	globalRateLimiter,
+	authRateLimiter,
+	writeRateLimiter,
+	readRateLimiter
+} from './middleware/rate-limit.middleware.js';
+import { cacheMiddleware, invalidateCacheMiddleware } from './middleware/cache.middleware.js';
 import { createTaskRouter } from './routes/tasks.routes.js';
 
 /**
@@ -38,6 +46,17 @@ export function createApp(tmCore?: TmCore): Express {
 
 	// Request logging
 	app.use(requestLoggerMiddleware);
+
+	// Rate limiting (skip health checks)
+	app.use((req, res, next) => {
+		if (req.path.includes('/health')) {
+			return next();
+		}
+		globalRateLimiter(req, res, next);
+	});
+
+	// Cache middleware for GET requests (before routes)
+	app.use(cacheMiddleware());
 
 	// === Routes ===
 
@@ -65,11 +84,20 @@ export function createApp(tmCore?: TmCore): Express {
 		});
 	});
 
-	// Public routes (optional auth)
-	app.use('/api/v1/public', optionalAuthMiddleware);
+	// Public routes (optional JWT auth)
+	app.use('/api/v1/public', optionalJwtAuthMiddleware);
 
-	// Protected routes (require auth)
-	app.use('/api/v1', authMiddleware);
+	// Protected routes (require JWT auth) - MUST come before route handlers
+	app.use('/api/v1/tasks', (req, res, next) => {
+		// Use JWT auth for protected task endpoints
+		jwtAuthMiddleware(req, res, next);
+	});
+
+	// Read operation rate limiting (GET requests)
+	app.use('/api/v1/tasks', readRateLimiter);
+
+	// Write operation rate limiting and cache invalidation
+	app.use('/api/v1/tasks', invalidateCacheMiddleware);
 
 	// Task management routes
 	// In development/testing, routes work even without tmCore (uses mock data)
