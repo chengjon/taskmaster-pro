@@ -1,103 +1,49 @@
-<a name="readme-top"></a>
+# Task Master Pro (TAMP)
 
-<h1 align="center">Task Master Pro (TAMP)</h1>
-
-<p align="center">
-<b>A professional task management system for AI-driven development</b>
-
-</p>
+**AI驱动的专业任务管理系统** | 让AI助手轻松管理你的开发工作流
 
 ---
 
-## 🚀 About This Project
+## 什么是 Task Master Pro？
 
-This is **Task Master Pro** - a fresh, independent project starting from commit `0a9f9565`. This repository serves as the official foundation for modern AI-driven development workflows with:
+Task Master Pro (TAMP) 是一个为现代AI驱动开发设计的任务管理系统。它与Claude、ChatGPT、Gemini等AI助手完美配合，帮助你：
 
-- ✨ Clean, modern codebase
-- 📚 Reorganized documentation structure
-- 🔄 Independent development branch
-- 🛠️ Enhanced tooling and configuration
+- 🎯 **有序管理任务** - 用AI自动生成、分解和优化任务
+- 🔗 **追踪依赖关系** - 清晰地管理任务间的依赖
+- 📊 **分析复杂度** - AI智能评估任务复杂度
+- 🚀 **加速开发** - 通过AI助手快速完成工作
+- 🔄 **支持多编辑器** - Cursor、Claude Code、Windsurf、VS Code等
 
-> 📖 See [**Branch Strategy**](docs/BRANCHES.md) for project structure details
+---
 
-## Documentation
+## 快速开始
 
-📚 **[View Full Documentation](https://docs.task-master.dev)**
+### 最简单的方式：Cursor 一键安装
 
-For detailed guides, API references, and comprehensive examples, visit our documentation site.
+[![一键安装到Cursor](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=taskmaster-pro&config=eyJjb21tYW5kIjoibnB4IC15IC0tcGFja2FnZT10YXNrLW1hc3Rlci1haSB0YXNrLW1hc3Rlci1haSIsImVudiI6eyJBTlRIUk9QSUNfQVBJX0tFWSI6IllPVVJfQU5USFJPUElDX0FQSV9LRVlfSEVSRSIsIlBFUlBMRVhJVFlfQVBJX0tFWSI6IllPVVJfUEVSUExFWElUWV9BUElfS0VZX0hFUkUiLCJPUEVOQUlfQVBJX0tFWSI6IllPVVJfT1BFTkFJX0tFWV9IRVJFIiwiR09PR0xFX0FQSV9LRVkiOiJZT1VSX0dPT0dMRV9LRVlfSEVSRSIsIk1JU1RSQUxfQVBJX0tFWSI6IllPVVJfTUlTVFJBTF9LRVlfSEVSRSIsIkdST1FfQVBJX0tFWSI6IllPVVJfR1JPUV9LRVlfSEVSRSIsIk9QRU5ST1VURVJfQVBJX0tFWSI6IllPVVJfT1BFTlJPVVRFUl9LRVlfSEVSRSIsIlhBSV9BUElfS0VZIjoiWU9VUl9YQUlfS0VZX0hFUkUiLCJBWlVSRV9PUEVOQUlfQVBJX0tFWSI6IllPVVJfQVpVUkVfS0VZX0hFUkUiLCJPTExBTUFfQVBJX0tFWSI6IllPVVJfT0xMQU1BX0FQSV9LRVlfSEVSRSJ9fQ%3D%3D)
 
-### Quick Reference
+> 安装后需配置API密钥。选择一个或多个AI提供商的密钥。
 
-The following documentation is also available in the repository:
-
-- **[Getting Started Guide (中文)](docs/zh-cn/GETTING-STARTED-CN.md)** - 完整的中文快速入门指南
-- **[Claude Code Integration (中文)](docs/zh-cn/CLAUDE-CN.md)** - Claude Code 集成指南（中文版）
-- [Configuration Guide](docs/configuration.md) - Set up environment variables and customize Task Master
-- [Tutorial](docs/tutorial.md) - Step-by-step guide to getting started with Task Master
-- [Command Reference](docs/command-reference.md) - Complete list of all available commands
-- [Task Structure](docs/task-structure.md) - Understanding the task format and features
-- [Example Interactions](docs/examples.md) - Common Cursor AI interaction examples
-- [Migration Guide](docs/migration-guide.md) - Guide to migrating to the new project structure
-- [Project Evolution](docs/architecture/PROJECT-EVOLUTION.md) - History of features and improvements from v1.0.1 to present
-- [Contributing Guide](docs/guides/CONTRIBUTING.md) - How to contribute to Task Master Pro
-
-#### Quick Install for Cursor 1.0+ (One-Click)
-
-[![Add taskmaster-pro MCP server to Cursor](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en/install-mcp?name=taskmaster-pro&config=eyJjb21tYW5kIjoibnB4IC15IC0tcGFja2FnZT10YXNrLW1hc3Rlci1haSB0YXNrLW1hc3Rlci1haSIsImVudiI6eyJBTlRIUk9QSUNfQVBJX0tFWSI6IllPVVJfQU5USFJPUElDX0FQSV9LRVlfSEVSRSIsIlBFUlBMRVhJVFlfQVBJX0tFWSI6IllPVVJfUEVSUExFWElUWV9BUElfS0VZX0hFUkUiLCJPUEVOQUlfQVBJX0tFWSI6IllPVVJfT1BFTkFJX0tFWV9IRVJFIiwiR09PR0xFX0FQSV9LRVkiOiJZT1VSX0dPT0dMRV9LRVlfSEVSRSIsIk1JU1RSQUxfQVBJX0tFWSI6IllPVVJfTUlTVFJBTF9LRVlfSEVSRSIsIkdST1FfQVBJX0tFWSI6IllPVVJfR1JPUV9LRVlfSEVSRSIsIk9QRU5ST1VURVJfQVBJX0tFWSI6IllPVVJfT1BFTlJPVVRFUl9LRVlfSEVSRSIsIlhBSV9BUElfS0VZIjoiWU9VUl9YQUlfS0VZX0hFUkUiLCJBWlVSRV9PUEVOQUlfQVBJX0tFWSI6IllPVVJfQVpVUkVfS0VZX0hFUkUiLCJPTExBTUFfQVBJX0tFWSI6IllPVVJfT0xMQU1BX0FQSV9LRVlfSEVSRSJ9fQ%3D%3D)
-
-> **Note:** After clicking the link, you'll still need to add your API keys to the configuration. The link installs the MCP server with placeholder keys that you'll need to replace with your actual API keys.
-
-#### Claude Code Quick Install
-
-For Claude Code users:
+### Claude Code 用户安装
 
 ```bash
 claude mcp add taskmaster-pro -- npx -y taskmaster-pro
 ```
 
-Don't forget to add your API keys to the configuration:
-- in the root .env of your Project
-- in the "env" section of your mcp config for taskmaster-pro
+然后在你的AI聊天窗口说：`Initialize Task Master Pro in my project`
 
+### 手工配置（所有编辑器）
 
-## Requirements
+#### 编辑器配置文件位置
 
-Task Master Pro utilizes AI across several commands, and those require a separate API key. You can use a variety of models from different AI providers provided you add your API keys. For example, if you want to use Claude 3.7, you'll need an Anthropic API key.
+| 编辑器 | 配置文件路径 | 配置键名 |
+|--------|----------|---------|
+| Cursor | `~/.cursor/mcp.json` | `mcpServers` |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` | `mcpServers` |
+| Claude Code | `.mcp.json` (项目根目录) | `mcpServers` |
+| VS Code | `.vscode/mcp.json` (项目根目录) | `servers` |
 
-You can define 3 types of models to be used: the main model, the research model, and the fallback model (in case either the main or research fail). Whatever model you use, its provider API key must be present in either mcp.json or .env.
-
-At least one (1) of the following is required:
-
-- Anthropic API key (Claude API)
-- OpenAI API key
-- Google Gemini API key
-- Perplexity API key (for research model)
-- xAI API Key (for research or main model)
-- OpenRouter API Key (for research or main model)
-- Claude Code (no API key required - requires Claude Code CLI)
-- Codex CLI (OAuth via ChatGPT subscription - requires Codex CLI)
-
-Using the research model is optional but highly recommended. You will need at least ONE API key (unless using Claude Code or Codex CLI with OAuth). Adding all API keys enables you to seamlessly switch between model providers at will.
-
-## Quick Start
-
-### Option 1: MCP (Recommended)
-
-MCP (Model Control Protocol) lets you run Task Master Pro directly from your editor.
-
-#### 1. Add your MCP config at the following path depending on your editor
-
-| Editor       | Scope   | Linux/macOS Path                      | Windows Path                                      | Key          |
-| ------------ | ------- | ------------------------------------- | ------------------------------------------------- | ------------ |
-| **Cursor**   | Global  | `~/.cursor/mcp.json`                  | `%USERPROFILE%\.cursor\mcp.json`                  | `mcpServers` |
-|              | Project | `<project_folder>/.cursor/mcp.json`   | `<project_folder>\.cursor\mcp.json`               | `mcpServers` |
-| **Windsurf** | Global  | `~/.codeium/windsurf/mcp_config.json` | `%USERPROFILE%\.codeium\windsurf\mcp_config.json` | `mcpServers` |
-| **VS Code**  | Project | `<project_folder>/.vscode/mcp.json`   | `<project_folder>\.vscode\mcp.json`               | `servers`    |
-| **Q CLI**    | Global  | `~/.aws/amazonq/mcp.json`             |                                                   | `mcpServers` |
-
-##### Manual Configuration
-
-###### Cursor & Windsurf & Q Developer CLI (`mcpServers`)
+#### 配置示例（Cursor/Windsurf/Claude Code）
 
 ```json
 {
@@ -106,28 +52,17 @@ MCP (Model Control Protocol) lets you run Task Master Pro directly from your edi
       "command": "npx",
       "args": ["-y", "taskmaster-pro"],
       "env": {
-        // "TASK_MASTER_TOOLS": "all", // Options: "all", "standard", "core", or comma-separated list of tools
-        "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY_HERE",
-        "PERPLEXITY_API_KEY": "YOUR_PERPLEXITY_API_KEY_HERE",
-        "OPENAI_API_KEY": "YOUR_OPENAI_KEY_HERE",
-        "GOOGLE_API_KEY": "YOUR_GOOGLE_KEY_HERE",
-        "MISTRAL_API_KEY": "YOUR_MISTRAL_KEY_HERE",
-        "GROQ_API_KEY": "YOUR_GROQ_KEY_HERE",
-        "OPENROUTER_API_KEY": "YOUR_OPENROUTER_KEY_HERE",
-        "XAI_API_KEY": "YOUR_XAI_KEY_HERE",
-        "AZURE_OPENAI_API_KEY": "YOUR_AZURE_KEY_HERE",
-        "OLLAMA_API_KEY": "YOUR_OLLAMA_API_KEY_HERE"
+        "ANTHROPIC_API_KEY": "your_key_here",
+        "PERPLEXITY_API_KEY": "your_key_here",
+        "OPENAI_API_KEY": "your_key_here",
+        "GOOGLE_API_KEY": "your_key_here"
       }
     }
   }
 }
 ```
 
-> 🔑 Replace `YOUR_…_KEY_HERE` with your real API keys. You can remove keys you don't use.
-
-> **Note**: If you see `0 tools enabled` in the MCP settings, restart your editor and check that your API keys are correctly configured.
-
-###### VS Code (`servers` + `type`)
+#### 配置示例（VS Code）
 
 ```json
 {
@@ -135,239 +70,175 @@ MCP (Model Control Protocol) lets you run Task Master Pro directly from your edi
     "taskmaster-pro": {
       "command": "npx",
       "args": ["-y", "taskmaster-pro"],
+      "type": "stdio",
       "env": {
-        // "TASK_MASTER_TOOLS": "all", // Options: "all", "standard", "core", or comma-separated list of tools
-        "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY_HERE",
-        "PERPLEXITY_API_KEY": "YOUR_PERPLEXITY_API_KEY_HERE",
-        "OPENAI_API_KEY": "YOUR_OPENAI_KEY_HERE",
-        "GOOGLE_API_KEY": "YOUR_GOOGLE_KEY_HERE",
-        "MISTRAL_API_KEY": "YOUR_MISTRAL_KEY_HERE",
-        "GROQ_API_KEY": "YOUR_GROQ_KEY_HERE",
-        "OPENROUTER_API_KEY": "YOUR_OPENROUTER_KEY_HERE",
-        "XAI_API_KEY": "YOUR_XAI_KEY_HERE",
-        "AZURE_OPENAI_API_KEY": "YOUR_AZURE_KEY_HERE",
-        "OLLAMA_API_KEY": "YOUR_OLLAMA_API_KEY_HERE"
-      },
-      "type": "stdio"
-    }
-  }
-}
-```
-
-> 🔑 Replace `YOUR_…_KEY_HERE` with your real API keys. You can remove keys you don't use.
-
-#### 2. (Cursor-only) Enable Taskmaster MCP
-
-Open Cursor Settings (Ctrl+Shift+J) ➡ Click on MCP tab on the left ➡ Enable taskmaster-pro with the toggle
-
-#### 3. (Optional) Configure the models you want to use
-
-In your editor's AI chat pane, say:
-
-```txt
-Change the main, research and fallback models to <model_name>, <model_name> and <model_name> respectively.
-```
-
-For example, to use Claude Code (no API key required):
-```txt
-Change the main model to claude-code/sonnet
-```
-
-[Table of available models](docs/models.md) | [Claude Code setup](docs/examples/claude-code-usage.md)
-
-#### 4. Initialize Task Master
-
-In your editor's AI chat pane, say:
-
-```txt
-Initialize Task Master Pro in my project
-```
-
-#### 5. Make sure you have a PRD (Recommended)
-
-For **new projects**: Create your PRD at `.taskmaster/docs/prd.txt`.
-For **existing projects**: You can use `scripts/prd.txt` or migrate with `TAMP migrate`
-
-An example PRD template is available after initialization in `.taskmaster/templates/example_prd.txt`.
-
-> [!NOTE]
-> While a PRD is recommended for complex projects, you can always create individual tasks by asking "Can you help me implement [description of what you want to do]?" in chat.
-
-**Always start with a detailed PRD.**
-
-The more detailed your PRD, the better the generated tasks will be.
-
-#### 6. Common Commands
-
-Use your AI assistant to:
-
-- Parse requirements: `Can you parse my PRD at scripts/prd.txt?`
-- Plan next step: `What's the next task I should work on?`
-- Implement a task: `Can you help me implement task 3?`
-- View multiple tasks: `Can you show me tasks 1, 3, and 5?`
-- Expand a task: `Can you help me expand task 4?`
-- **Research fresh information**: `Research the latest best practices for implementing JWT authentication with Node.js`
-- **Research with context**: `Research React Query v5 migration strategies for our current API implementation in src/api.js`
-
-[More examples on how to use Task Master in chat](docs/examples.md)
-
-### Option 2: Using Command Line
-
-#### Installation
-
-```bash
-# Install globally
-npm install -g taskmaster-pro
-
-# OR install locally within your project
-npm install taskmaster-pro
-
-# Command aliases available:
-# taskmaster-pro, tmp
-```
-
-#### Initialize a new project
-
-```bash
-# If installed globally
-TAMP init
-# or use short alias
-TAMP init
-
-# If installed locally
-npx TAMP init
-
-# Initialize project with specific rules
-TAMP init --rules cursor,windsurf,vscode
-```
-
-This will prompt you for project details and set up a new project with the necessary files and structure.
-
-#### Common Commands
-
-```bash
-# Initialize a new project
-TAMP init
-# or use short alias: TAMP init
-
-# Parse a PRD and generate tasks
-TAMP parse-prd your-prd.txt
-
-# List all tasks
-TAMP list
-
-# Show the next task to work on
-TAMP next
-
-# Show specific task(s) - supports comma-separated IDs
-TAMP show 1,3,5
-
-# Research fresh information with project context
-TAMP research "What are the latest best practices for JWT authentication?"
-
-# Move tasks between tags (cross-tag movement)
-TAMP move --from=5 --from-tag=backlog --to-tag=in-progress
-TAMP move --from=5,6,7 --from-tag=backlog --to-tag=done --with-dependencies
-TAMP move --from=5 --from-tag=backlog --to-tag=in-progress --ignore-dependencies
-
-# Generate task files
-TAMP generate
-
-# Add rules after initialization
-TAMP rules add windsurf,roo,vscode
-```
-
-## Tool Loading Configuration
-
-### Optimizing MCP Tool Loading
-
-Task Master Pro's MCP server supports selective tool loading to reduce context window usage. By default, all 36 tools are loaded (~21,000 tokens) to maintain backward compatibility with existing installations.
-
-You can optimize performance by configuring the `TASK_MASTER_TOOLS` environment variable:
-
-### Available Modes
-
-| Mode | Tools | Context Usage | Use Case |
-|------|-------|--------------|----------|
-| `all` (default) | 36 | ~21,000 tokens | Complete feature set - all tools available |
-| `standard` | 15 | ~10,000 tokens | Common task management operations |
-| `core` (or `lean`) | 7 | ~5,000 tokens | Essential daily development workflow |
-| `custom` | Variable | Variable | Comma-separated list of specific tools |
-
-### Configuration Methods
-
-#### Method 1: Environment Variable in MCP Configuration
-
-Add `TASK_MASTER_TOOLS` to your MCP configuration file's `env` section:
-
-```jsonc
-{
-  "mcpServers": {  // or "servers" for VS Code
-    "taskmaster-pro": {
-      "command": "npx",
-      "args": ["-y", "--package=taskmaster-pro", "taskmaster-pro"],
-      "env": {
-        "TASK_MASTER_TOOLS": "standard",  // Options: "all", "standard", "core", "lean", or comma-separated list
-        "ANTHROPIC_API_KEY": "your-key-here",
-        // ... other API keys
+        "ANTHROPIC_API_KEY": "your_key_here",
+        "PERPLEXITY_API_KEY": "your_key_here",
+        "OPENAI_API_KEY": "your_key_here",
+        "GOOGLE_API_KEY": "your_key_here"
       }
     }
   }
 }
 ```
 
-#### Method 2: Claude Code CLI (One-Time Setup)
+---
 
-For Claude Code users, you can set the mode during installation:
+## 需要什么
+
+**至少需要以下之一的API密钥：**
+
+- 🔹 Anthropic (Claude) - 推荐
+- 🔹 OpenAI (GPT-4)
+- 🔹 Google (Gemini)
+- 🔹 Perplexity (研究功能 - 推荐)
+- 🔹 xAI (Grok)
+- 🔹 OpenRouter (多模型)
+- 🔹 Mistral
+- 🔹 Ollama
+
+**不需要API密钥的方案：**
+
+- ✨ Claude Code CLI (使用本地Claude实例)
+- ✨ Codex CLI (使用ChatGPT订阅)
+
+---
+
+## 使用方式
+
+### 方式1：通过AI聊天（推荐）
+
+在编辑器的AI聊天窗口中使用自然语言：
+
+```
+初始化项目：Initialize Task Master Pro in my project
+
+解析需求：Parse my PRD at .taskmaster/docs/prd.txt
+
+查看任务：Show me all tasks
+
+查看下一个任务：What's the next task?
+
+研究信息：Research the latest best practices for JWT authentication
+
+扩展任务：Expand task 3 into subtasks
+```
+
+### 方式2：命令行
 
 ```bash
-# Core mode example (~70% token reduction)
-claude mcp add taskmaster-pro --scope user \
-  --env TASK_MASTER_TOOLS="core" \
-  -- npx -y taskmaster-pro@latest
+# 全局安装
+npm install -g taskmaster-pro
 
-# Custom tools example
-claude mcp add taskmaster-pro --scope user \
-  --env TASK_MASTER_TOOLS="get_tasks,next_task,set_task_status" \
+# 初始化项目
+TAMP init
+
+# 解析PRD生成任务
+TAMP parse-prd .taskmaster/docs/prd.txt
+
+# 列出所有任务
+TAMP list
+
+# 查看下一个任务
+TAMP next
+
+# 查看特定任务
+TAMP show 1,3,5
+
+# 设置任务状态
+TAMP set-status --id=1 --status=done
+
+# 生成任务文件
+TAMP generate
+```
+
+---
+
+## 项目结构
+
+初始化后，你的项目会有这样的结构：
+
+```
+.taskmaster/
+├── tasks/
+│   ├── tasks.json          # 任务数据库
+│   ├── task_1.txt          # 个别任务文件
+│   └── ...
+├── docs/
+│   ├── prd.txt             # 产品需求文档
+│   └── templates/
+└── config.json             # 配置文件
+```
+
+---
+
+## 文档和资源
+
+### 📚 完整文档
+
+- **[官方文档网站](https://docs.task-master.dev)** - 详细的API参考和指南
+
+### 📖 快速参考
+
+- **[中文快速入门](docs/zh-cn/GETTING-STARTED-CN.md)** - 完整的中文教程
+- **[Claude Code集成](docs/zh-cn/CLAUDE-CN.md)** - Claude Code专项指南
+- [命令参考](docs/command-reference.md) - 所有可用命令
+- [配置指南](docs/configuration.md) - 环境变量配置
+- [任务结构](docs/task-structure.md) - 理解任务格式
+- [使用示例](docs/examples.md) - 常见使用场景
+- [迁移指南](docs/migration-guide.md) - 项目升级指南
+- [贡献指南](docs/guides/CONTRIBUTING.md) - 如何贡献代码
+
+### 🏗️ 架构文档
+
+- [分支策略](docs/BRANCHES.md) - 项目分支说明
+- [项目演进](docs/architecture/PROJECT-EVOLUTION.md) - 功能发展历史
+
+---
+
+## 优化MCP工具加载
+
+如果想减少token使用，可以配置工具加载模式：
+
+| 模式 | 工具数 | Token消耗 | 适用场景 |
+|------|-------|---------|---------|
+| `all` (默认) | 36 | ~21,000 | 完整功能集 |
+| `standard` | 15 | ~10,000 | 常见操作 |
+| `core` | 7 | ~5,000 | 日常开发 |
+| 自定义 | 可变 | 可变 | 指定工具 |
+
+### 配置方式
+
+在MCP配置的 `env` 部分添加：
+
+```json
+"env": {
+  "TASK_MASTER_TOOLS": "core",
+  // 其他配置...
+}
+```
+
+或通过Claude Code CLI：
+
+```bash
+claude mcp add taskmaster-pro \
+  --env TASK_MASTER_TOOLS="core" \
   -- npx -y taskmaster-pro@latest
 ```
 
-### Tool Sets Details
+---
 
-**Core Tools (7):** `get_tasks`, `next_task`, `get_task`, `set_task_status`, `update_subtask`, `parse_prd`, `expand_task`
+## 常见问题
 
-**Standard Tools (15):** All core tools plus `initialize_project`, `analyze_project_complexity`, `expand_all`, `add_subtask`, `remove_task`, `generate`, `add_task`, `complexity_report`
+### TAMP init 没有响应？
 
-**All Tools (36):** Complete set including project setup, task management, analysis, dependencies, tags, research, and more
-
-### Recommendations
-
-- **New users**: Start with `"standard"` mode for a good balance
-- **Large projects**: Use `"core"` mode to minimize token usage
-- **Complex workflows**: Use `"all"` mode or custom selection
-- **Backward compatibility**: If not specified, defaults to `"all"` mode
-
-## Claude Code Support
-
-Task Master Pro now supports Claude models through the Claude Code CLI, which requires no API key:
-
-- **Models**: `claude-code/opus` and `claude-code/sonnet`
-- **Requirements**: Claude Code CLI installed
-- **Benefits**: No API key needed, uses your local Claude instance
-
-[Learn more about Claude Code setup](docs/examples/claude-code-usage.md)
-
-## Troubleshooting
-
-### If `TAMP init` doesn't respond
-
-Try running it with Node directly:
+直接用Node运行：
 
 ```bash
 node node_modules/taskmaster-pro/scripts/init.js
 ```
 
-Or clone the repository and run:
+或克隆项目运行：
 
 ```bash
 git clone https://github.com/chengjon/taskmaster-pro.git
@@ -375,21 +246,71 @@ cd taskmaster-pro
 node scripts/init.js
 ```
 
-## Licensing
+### 如何使用Claude模型而不需要API密钥？
 
-Task Master Pro is licensed under the MIT License with Commons Clause. This means you can:
+使用Claude Code CLI：
 
-✅ **Allowed**:
+```bash
+claude mcp add taskmaster-pro -- npx -y taskmaster-pro
+```
 
-- Use Task Master Pro for any purpose (personal, commercial, academic)
-- Modify the code
-- Distribute copies
-- Create and sell products built using Task Master Pro
+然后在聊天中配置模型：
 
-❌ **Not Allowed**:
+```
+Change the main model to claude-code/sonnet
+```
 
-- Sell Task Master Pro itself
-- Offer Task Master Pro as a hosted service
-- Create competing products based on Task Master Pro
+### 需要PRD吗？
 
-See the [LICENSE](LICENSE) file for the complete license text and [licensing details](docs/licensing.md) for more information.
+强烈推荐！详细的PRD会生成更好的任务。
+
+对于简单的任务，你也可以直接问AI：`Can you help me implement [功能描述]?`
+
+---
+
+## 许可证
+
+Task Master Pro 采用 **MIT License + Commons Clause** 许可证。
+
+✅ **允许：**
+
+- 个人、商业、学术用途
+- 修改代码
+- 分发拷贝
+- 用于构建商业产品
+
+❌ **不允许：**
+
+- 出售 Task Master Pro 本身
+- 提供Task Master Pro的托管服务
+- 基于Task Master Pro创建竞争产品
+
+详见 [LICENSE](LICENSE) 和 [许可证详情](docs/licensing.md)
+
+---
+
+## 关于本项目
+
+这是 **Task Master Pro (TAMP)** - 一个全新的、独立的项目，从提交 `0a9f9565` 开始的官方版本。
+
+特点：
+
+- ✨ 现代化代码库
+- 📚 组织清晰的文档结构
+- 🔄 独立的开发分支
+- 🛠️ 增强的工具和配置
+
+详见 [分支策略](docs/BRANCHES.md) 了解项目结构。
+
+---
+
+## 获取帮助
+
+- 📖 查看 [官方文档](https://docs.task-master.dev)
+- 💬 在编辑器AI聊天中提问
+- 🐛 提交 [Issue](https://github.com/chengjon/taskmaster-pro/issues)
+- 📧 查看 [贡献指南](docs/guides/CONTRIBUTING.md)
+
+---
+
+**Made with ❤️ for AI-driven development**
