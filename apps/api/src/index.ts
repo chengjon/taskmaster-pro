@@ -30,10 +30,14 @@ async function startServer(): Promise<void> {
 
 		// Initialize FileWatcher for tasks.json to keep cache coherent with CLI changes
 		// This fixes Issue #2: Cache incoherence between CLI and API
+		let destroyWatcher: (() => void) | null = null;
 		try {
-			const { initializeTasksWatcher } = await import('@tm/core');
+			const { initializeTasksWatcher, destroyTasksWatcher } = await import('@tm/core');
 			const tasksFilePath = path.join(process.cwd(), '.taskmaster/tasks/tasks.json');
 			const watcher = initializeTasksWatcher(tasksFilePath);
+
+			// Store destroy function for graceful shutdown
+			destroyWatcher = destroyTasksWatcher;
 
 			// Listen for file changes and invalidate cache
 			watcher.on('change', () => {
@@ -77,22 +81,33 @@ async function startServer(): Promise<void> {
 			);
 		});
 
-		// Graceful shutdown
-		process.on('SIGTERM', () => {
-			logger.info('SIGTERM received, shutting down gracefully');
-			server.close(() => {
-				logger.info('Server closed');
-				process.exit(0);
-			});
-		});
+		// Graceful shutdown helper
+		const gracefulShutdown = (signal: string) => {
+			logger.info(`${signal} received, shutting down gracefully`);
 
-		process.on('SIGINT', () => {
-			logger.info('SIGINT received, shutting down gracefully');
+			// Destroy FileWatcher to clean up file descriptors
+			// This fixes the file descriptor leak issue
+			if (destroyWatcher) {
+				try {
+					destroyWatcher();
+					logger.info('FileWatcher cleaned up successfully');
+				} catch (error) {
+					logger.warn(
+						{ error: error instanceof Error ? error.message : String(error) },
+						'Error cleaning up FileWatcher'
+					);
+				}
+			}
+
 			server.close(() => {
 				logger.info('Server closed');
 				process.exit(0);
 			});
-		});
+		};
+
+		// Graceful shutdown handlers
+		process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+		process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 		// Handle uncaught exceptions
 		process.on('uncaughtException', (error) => {

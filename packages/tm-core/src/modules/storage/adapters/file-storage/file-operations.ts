@@ -34,11 +34,12 @@ export class FileOperations {
 	}
 
 	/**
-	 * Acquire cross-process file lock
+	 * Acquire cross-process file lock with stale lock detection and cleanup
 	 */
 	private async acquireFileLock(filePath: string): Promise<void> {
 		const lockFile = `${filePath}.lock`;
 		const startTime = Date.now();
+		const staleTimeout = 60000; // 60s - consider locks older than this as stale
 
 		while (Date.now() - startTime < this.lockTimeoutMs) {
 			try {
@@ -48,7 +49,30 @@ export class FileOperations {
 				return; // Lock acquired
 			} catch (error: any) {
 				if (error.code === 'EEXIST') {
-					// Lock file exists, wait and retry
+					// Lock file exists, check if it's stale
+					try {
+						const stats = await fs.stat(lockFile);
+						const lockAge = Date.now() - stats.mtimeMs;
+
+						// If lock is too old (likely process crashed), clean it up
+						if (lockAge > staleTimeout) {
+							try {
+								await fs.unlink(lockFile);
+								// Continue to retry acquiring the lock
+								continue;
+							} catch {
+								// If cleanup fails, just wait and retry
+								await new Promise((resolve) => setTimeout(resolve, this.lockWaitMs));
+								continue;
+							}
+						}
+					} catch {
+						// If stat fails, just wait and retry
+						await new Promise((resolve) => setTimeout(resolve, this.lockWaitMs));
+						continue;
+					}
+
+					// Lock file exists and is not stale, wait and retry
 					await new Promise((resolve) => setTimeout(resolve, this.lockWaitMs));
 					continue;
 				}
@@ -60,17 +84,21 @@ export class FileOperations {
 	}
 
 	/**
-	 * Release cross-process file lock
+	 * Release cross-process file lock with graceful error handling
 	 */
 	private async releaseFileLock(filePath: string): Promise<void> {
 		const lockFile = `${filePath}.lock`;
 		try {
 			await fs.unlink(lockFile);
 		} catch (error: any) {
-			// Lock file may have been deleted, ignore
-			if (error.code !== 'ENOENT') {
-				throw error;
+			// Lock file may have been deleted, that's fine
+			if (error.code === 'ENOENT') {
+				return;
 			}
+
+			// For other errors (permission denied, etc.), log but don't throw
+			// This ensures the process continues running even if cleanup fails
+			// The stale lock cleanup in acquireFileLock will handle it later
 		}
 	}
 

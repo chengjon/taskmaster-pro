@@ -102,11 +102,51 @@ export class TaskService {
 		try {
 			// Use TmCore to fetch real tasks
 			if (this.tmCore && this.tmCore.tasks) {
-				const tasks = await this.tmCore.tasks.list();
+				let tasks = await this.tmCore.tasks.list();
 
-				// Apply pagination manually if needed
+				// Apply status filter if provided
+				if (query.status) {
+					tasks = tasks.filter(task => task.status === query.status);
+				}
+
+				// Apply priority filter if provided
+				if (query.priority) {
+					tasks = tasks.filter(task => task.priority === query.priority);
+				}
+
+				// Apply tags filter if provided
+				if (query.tags && (typeof query.tags === 'string' || query.tags.length > 0)) {
+					const tagsArray = typeof query.tags === 'string' ? [query.tags] : query.tags;
+					tasks = tasks.filter(task =>
+						task.tags && task.tags.length > 0 &&
+						tagsArray.some(tag => task.tags?.includes(tag))
+					);
+				}
+
+				// Apply sorting
+				const sortBy = query.sortBy || 'createdAt';
+				const sortOrder = query.sortOrder || 'desc';
+				tasks.sort((a, b) => {
+					let aValue: any = a[sortBy as keyof typeof a];
+					let bValue: any = b[sortBy as keyof typeof b];
+
+					// Convert dates to timestamps for comparison
+					if (aValue instanceof Date) aValue = aValue.getTime();
+					if (bValue instanceof Date) bValue = bValue.getTime();
+
+					// Handle missing values
+					if (aValue === null || aValue === undefined) return sortOrder === 'asc' ? 1 : -1;
+					if (bValue === null || bValue === undefined) return sortOrder === 'asc' ? -1 : 1;
+
+					// Compare values
+					if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+					if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+					return 0;
+				});
+
+				// Apply pagination
 				const offset = query.offset || 0;
-				const limit = query.limit || 50;
+				const limit = query.limit || 20;
 				const paginatedTasks = tasks.slice(offset, offset + limit);
 
 				return {
@@ -122,8 +162,8 @@ export class TaskService {
 			return {
 				tasks: [],
 				total: 0,
-				limit: query.limit,
-				offset: query.offset,
+				limit: query.limit || 20,
+				offset: query.offset || 0,
 				hasMore: false
 			};
 		} catch (error) {
