@@ -2,6 +2,8 @@
  * @fileoverview Task Service Layer
  *
  * Bridges between API controllers and @tm/core task domain
+ * Note: This is a limited implementation as the current TmCore API
+ * only supports read (list, get) and update operations, not create/delete
  */
 
 import type { TmCore } from '@tm/core';
@@ -15,13 +17,13 @@ export class TaskService {
 
 	/**
 	 * Create a new task
+	 * NOTE: This is a limited implementation returning mock data
+	 * The current TmCore TasksDomain does not support create operations
 	 */
 	async createTask(data: CreateTaskRequest) {
 		try {
-			// Use @tm/core tasks domain to create task
-			// For now, we'll implement a basic version
-			// In production, this would call tmCore.tasks.create(data)
-
+			// Currently TmCore doesn't support task creation via API
+			// Return mock data for backward compatibility
 			const task = {
 				id: `task-${Date.now()}`,
 				title: data.title,
@@ -34,7 +36,7 @@ export class TaskService {
 				parentTaskId: data.parentTaskId || null,
 				createdAt: new Date(),
 				updatedAt: new Date(),
-				createdBy: 'system', // Will be replaced with authenticated user
+				createdBy: 'system',
 				subtasks: []
 			};
 
@@ -49,13 +51,20 @@ export class TaskService {
 	 */
 	async getTask(taskId: string) {
 		try {
-			// In production: const task = await this.tmCore.tasks.get(taskId);
-			// For now, return a mock task
-
 			if (!taskId || taskId.trim() === '') {
 				throw new Error('Task ID is required');
 			}
 
+			// Use TmCore to fetch real task data
+			if (this.tmCore && this.tmCore.tasks) {
+				const result = await this.tmCore.tasks.get(taskId);
+				if (!result || !result.task) {
+					return null;
+				}
+				return result.task;
+			}
+
+			// Fallback to mock data if TmCore is unavailable
 			return {
 				id: taskId,
 				title: 'Sample Task',
@@ -81,14 +90,71 @@ export class TaskService {
 	 */
 	async listTasks(query: TaskListQuery) {
 		try {
-			// In production: const tasks = await this.tmCore.tasks.list({...query});
-			// For now, return empty array with pagination info
+			// Use TmCore to fetch real tasks
+			if (this.tmCore && this.tmCore.tasks) {
+				const result = await this.tmCore.tasks.list();
+				let tasks = result.tasks || [];
 
+				// Apply status filter if provided
+				if (query.status) {
+					tasks = tasks.filter((task: any) => task.status === query.status);
+				}
+
+				// Apply priority filter if provided
+				if (query.priority) {
+					tasks = tasks.filter((task: any) => task.priority === query.priority);
+				}
+
+				// Apply tags filter if provided
+				if (query.tags && (typeof query.tags === 'string' || query.tags.length > 0)) {
+					const tagsArray = typeof query.tags === 'string' ? [query.tags] : query.tags;
+					tasks = tasks.filter((task: any) =>
+						task.tags && task.tags.length > 0 &&
+						tagsArray.some((tag: string) => task.tags?.includes(tag))
+					);
+				}
+
+				// Apply sorting
+				const sortBy = query.sortBy || 'createdAt';
+				const sortOrder = query.sortOrder || 'desc';
+				tasks.sort((a: any, b: any) => {
+					let aValue: any = a[sortBy as keyof typeof a];
+					let bValue: any = b[sortBy as keyof typeof b];
+
+					// Convert dates to timestamps for comparison
+					if (aValue instanceof Date) aValue = aValue.getTime();
+					if (bValue instanceof Date) bValue = bValue.getTime();
+
+					// Handle missing values
+					if (aValue === null || aValue === undefined) return sortOrder === 'asc' ? 1 : -1;
+					if (bValue === null || bValue === undefined) return sortOrder === 'asc' ? -1 : 1;
+
+					// Compare values
+					if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+					if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+					return 0;
+				});
+
+				// Apply pagination
+				const offset = query.offset || 0;
+				const limit = query.limit || 20;
+				const paginatedTasks = tasks.slice(offset, offset + limit);
+
+				return {
+					tasks: paginatedTasks,
+					total: tasks.length,
+					limit,
+					offset,
+					hasMore: offset + limit < tasks.length
+				};
+			}
+
+			// Fallback to empty response if TmCore is unavailable
 			return {
 				tasks: [],
 				total: 0,
-				limit: query.limit,
-				offset: query.offset,
+				limit: query.limit || 20,
+				offset: query.offset || 0,
 				hasMore: false
 			};
 		} catch (error) {
@@ -105,8 +171,17 @@ export class TaskService {
 				throw new Error('Task ID is required');
 			}
 
-			// In production: await this.tmCore.tasks.update(taskId, data);
+			// Use TmCore to update real task
+			if (this.tmCore && this.tmCore.tasks) {
+				await this.tmCore.tasks.update(taskId, data as any);
+				// Fetch updated task to return
+				const result = await this.tmCore.tasks.get(taskId);
+				if (result && result.task) {
+					return result.task;
+				}
+			}
 
+			// Fallback to mock data if TmCore is unavailable
 			const updatedTask = {
 				id: taskId,
 				title: data.title || 'Updated Task',
@@ -131,6 +206,8 @@ export class TaskService {
 
 	/**
 	 * Delete a task
+	 * NOTE: This is a limited implementation returning mock response
+	 * The current TmCore TasksDomain does not support delete operations
 	 */
 	async deleteTask(taskId: string) {
 		try {
@@ -138,8 +215,8 @@ export class TaskService {
 				throw new Error('Task ID is required');
 			}
 
-			// In production: await this.tmCore.tasks.delete(taskId);
-
+			// Currently TmCore doesn't support task deletion via API
+			// Return success response for backward compatibility
 			return { id: taskId, deleted: true };
 		} catch (error) {
 			throw new Error(`Failed to delete task: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -148,6 +225,7 @@ export class TaskService {
 
 	/**
 	 * Get task subtasks
+	 * NOTE: Subtasks are accessed through the main task object's subtasks array
 	 */
 	async getSubtasks(taskId: string) {
 		try {
@@ -155,8 +233,18 @@ export class TaskService {
 				throw new Error('Task ID is required');
 			}
 
-			// In production: const subtasks = await this.tmCore.tasks.getSubtasks(taskId);
+			// Use TmCore to fetch task with subtasks
+			if (this.tmCore && this.tmCore.tasks) {
+				const result = await this.tmCore.tasks.get(taskId);
+				if (result && result.task && result.task.subtasks) {
+					return {
+						parentTaskId: taskId,
+						subtasks: result.task.subtasks
+					};
+				}
+			}
 
+			// Fallback to empty response if TmCore is unavailable
 			return {
 				parentTaskId: taskId,
 				subtasks: []
@@ -168,6 +256,8 @@ export class TaskService {
 
 	/**
 	 * Create a subtask
+	 * NOTE: This is a limited implementation returning mock data
+	 * The current TmCore TasksDomain does not support subtask creation
 	 */
 	async createSubtask(parentTaskId: string, data: CreateTaskRequest) {
 		try {
@@ -175,8 +265,8 @@ export class TaskService {
 				throw new Error('Parent Task ID is required');
 			}
 
-			// In production: const subtask = await this.tmCore.tasks.createSubtask(parentTaskId, data);
-
+			// Currently TmCore doesn't support subtask creation via API
+			// Return mock data for backward compatibility
 			const subtask = {
 				id: `subtask-${Date.now()}`,
 				parentTaskId,

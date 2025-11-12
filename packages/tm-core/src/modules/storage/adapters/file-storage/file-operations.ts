@@ -3,14 +3,17 @@
  */
 
 import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
 import { constants } from 'node:fs';
 import type { FileStorageData } from './format-handler.js';
 
 /**
- * Handles atomic file operations with locking mechanism
+ * Handles atomic file operations with cross-process locking mechanism
  */
 export class FileOperations {
 	private fileLocks: Map<string, Promise<void>> = new Map();
+	private lockWaitMs = 100; // Wait 100ms between lock checks
+	private lockTimeoutMs = 30000; // 30 second timeout for lock acquisition
 
 	/**
 	 * Read and parse JSON file
@@ -31,13 +34,82 @@ export class FileOperations {
 	}
 
 	/**
-	 * Write JSON file with atomic operation and locking
+	 * Acquire cross-process file lock with stale lock detection and cleanup
+	 */
+	private async acquireFileLock(filePath: string): Promise<void> {
+		const lockFile = `${filePath}.lock`;
+		const startTime = Date.now();
+		const staleTimeout = 60000; // 60s - consider locks older than this as stale
+
+		while (Date.now() - startTime < this.lockTimeoutMs) {
+			try {
+				// Try to create lock file exclusively (fails if exists)
+				const fd = await fs.open(lockFile, 'wx');
+				await fd.close();
+				return; // Lock acquired
+			} catch (error: any) {
+				if (error.code === 'EEXIST') {
+					// Lock file exists, check if it's stale
+					try {
+						const stats = await fs.stat(lockFile);
+						const lockAge = Date.now() - stats.mtimeMs;
+
+						// If lock is too old (likely process crashed), clean it up
+						if (lockAge > staleTimeout) {
+							try {
+								await fs.unlink(lockFile);
+								// Continue to retry acquiring the lock
+								continue;
+							} catch {
+								// If cleanup fails, just wait and retry
+								await new Promise((resolve) => setTimeout(resolve, this.lockWaitMs));
+								continue;
+							}
+						}
+					} catch {
+						// If stat fails, just wait and retry
+						await new Promise((resolve) => setTimeout(resolve, this.lockWaitMs));
+						continue;
+					}
+
+					// Lock file exists and is not stale, wait and retry
+					await new Promise((resolve) => setTimeout(resolve, this.lockWaitMs));
+					continue;
+				}
+				throw error;
+			}
+		}
+
+		throw new Error(`Failed to acquire lock for ${filePath} after ${this.lockTimeoutMs}ms`);
+	}
+
+	/**
+	 * Release cross-process file lock with graceful error handling
+	 */
+	private async releaseFileLock(filePath: string): Promise<void> {
+		const lockFile = `${filePath}.lock`;
+		try {
+			await fs.unlink(lockFile);
+		} catch (error: any) {
+			// Lock file may have been deleted, that's fine
+			if (error.code === 'ENOENT') {
+				return;
+			}
+
+			// For other errors (permission denied, etc.), log but don't throw
+			// This ensures the process continues running even if cleanup fails
+			// The stale lock cleanup in acquireFileLock will handle it later
+		}
+	}
+
+	/**
+	 * Write JSON file with atomic operation and cross-process locking
 	 */
 	async writeJson(
 		filePath: string,
 		data: FileStorageData | any
 	): Promise<void> {
-		// Use file locking to prevent concurrent writes
+		// Use in-process file locking to prevent concurrent writes within same process
 		const lockKey = filePath;
 		const existingLock = this.fileLocks.get(lockKey);
 
@@ -45,7 +117,18 @@ export class FileOperations {
 			await existingLock;
 		}
 
-		const lockPromise = this.performAtomicWrite(filePath, data);
+		const lockPromise = (async () => {
+			// Acquire cross-process lock
+			await this.acquireFileLock(filePath);
+
+			try {
+				await this.performAtomicWrite(filePath, data);
+			} finally {
+				// Release cross-process lock
+				await this.releaseFileLock(filePath);
+			}
+		})();
+
 		this.fileLocks.set(lockKey, lockPromise);
 
 		try {

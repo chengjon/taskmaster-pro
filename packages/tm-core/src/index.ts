@@ -125,3 +125,7 @@ export { TaskLoaderService } from './modules/tasks/services/task-loader.service.
 
 // Integration - Advanced
 export { ExportService } from './modules/integration/services/export.service.js';
+
+// Storage - File Watching (for cache coherence and external change detection)
+export { FileWatcher, initializeTasksWatcher, getTasksWatcher, destroyTasksWatcher } from './modules/storage/file-watcher.js';
+export type { FileChangeEvent } from './modules/storage/file-watcher.js';
