@@ -1,0 +1,993 @@
+openapi: 3.0.3
+info:
+  title: Task Master API
+  description: |
+    Comprehensive task management API with support for CRUD operations, batch processing,
+    authentication, caching, and rate limiting.
+
+    ## Features
+    - Full CRUD operations for tasks and subtasks
+    - JWT-based authentication (HS256/RS256)
+    - Batch operations for bulk task management
+    - Automatic response caching for GET requests
+    - Rate limiting (global, auth, read, write)
+    - Comprehensive error handling
+    - Request logging and tracing
+
+    ## Authentication
+    All protected endpoints require a valid JWT token in the Authorization header:
+    ```
+    Authorization: Bearer <jwt_token>
+    ```
+
+    The JWT payload must include:
+    - `sub` (required): User ID
+    - `email` (optional): User email
+    - `role` (optional): User role (defaults to 'user')
+    - `exp` (required): Token expiration time
+
+  version: 1.0.0
+  contact:
+    name: Task Master Team
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+  - url: https://api.taskmaster.dev/api/v1
+    description: Production server
+  - url: https://staging-api.taskmaster.dev/api/v1
+    description: Staging server
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns basic health status of the API
+      tags:
+        - Health
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  uptime:
+                    type: number
+                    description: Server uptime in seconds
+                    example: 123.456
+
+  /health/ready:
+    get:
+      summary: Readiness probe
+      description: Checks if the API is ready to accept traffic
+      tags:
+        - Health
+      responses:
+        '200':
+          description: API is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ready:
+                    type: boolean
+                    example: true
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /health/live:
+    get:
+      summary: Liveness probe
+      description: Checks if the API is running
+      tags:
+        - Health
+      responses:
+        '200':
+          description: API is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alive:
+                    type: boolean
+                    example: true
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /tasks:
+    get:
+      summary: List all tasks
+      description: |
+        Retrieve a paginated list of tasks with optional filtering, searching, and sorting.
+
+        **Response Caching**: GET responses are cached for 5 minutes. Cache is invalidated
+        when tasks are created, updated, or deleted.
+
+        **Rate Limiting**: Subject to read rate limit (100 requests per minute).
+      operationId: listTasks
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: Filter tasks by status
+          schema:
+            type: string
+            enum: [pending, in-progress, done, review, deferred, cancelled]
+        - name: priority
+          in: query
+          description: Filter tasks by priority
+          schema:
+            type: string
+            enum: [high, medium, low]
+        - name: tags
+          in: query
+          description: Filter tasks by tags (can be comma-separated or array)
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+        - name: limit
+          in: query
+          description: Maximum number of tasks to return
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          description: Number of tasks to skip
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: sortBy
+          in: query
+          description: Sort field
+          schema:
+            type: string
+            enum: [createdAt, updatedAt, dueDate, priority]
+            default: createdAt
+        - name: sortOrder
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Successfully retrieved tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      tasks:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Task'
+                      total:
+                        type: integer
+                        example: 42
+                      limit:
+                        type: integer
+                      offset:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create a new task
+      description: |
+        Create a single new task.
+
+        **Rate Limiting**: Subject to write rate limit (30 requests per minute).
+
+        **Cache Invalidation**: Creates invalidate the task list cache.
+      operationId: createTask
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/batch/create:
+    post:
+      summary: Batch create multiple tasks
+      description: |
+        Create multiple tasks in a single request. Maximum 100 tasks per request.
+
+        **Rate Limiting**: Subject to write rate limit (30 requests per minute).
+
+        **Performance**: More efficient than multiple POST requests for bulk operations.
+      operationId: batchCreateTasks
+      tags:
+        - Tasks
+        - Batch Operations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tasks:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CreateTaskRequest'
+                  minItems: 1
+                  maxItems: 100
+              required:
+                - tasks
+      responses:
+        '201':
+          description: Tasks successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      created:
+                        type: integer
+                        example: 5
+                      tasks:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Task'
+                      errors:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            index:
+                              type: integer
+                            error:
+                              type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/batch/update:
+    patch:
+      summary: Batch update multiple tasks
+      description: |
+        Update multiple tasks in a single request. Maximum 100 tasks per request.
+
+        **Rate Limiting**: Subject to write rate limit (30 requests per minute).
+
+        **Partial Updates**: Each task can have different fields updated.
+      operationId: batchUpdateTasks
+      tags:
+        - Tasks
+        - Batch Operations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                updates:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      changes:
+                        $ref: '#/components/schemas/UpdateTaskRequest'
+                    required:
+                      - id
+                      - changes
+                  minItems: 1
+                  maxItems: 100
+              required:
+                - updates
+      responses:
+        '200':
+          description: Tasks successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      updated:
+                        type: integer
+                        example: 5
+                      tasks:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/batch/delete:
+    delete:
+      summary: Batch delete multiple tasks
+      description: |
+        Delete multiple tasks in a single request. Maximum 100 tasks per request.
+
+        **Rate Limiting**: Subject to write rate limit (30 requests per minute).
+
+        **Soft Delete**: Deletion is permanent. Consider using status='cancelled' for soft deletes.
+      operationId: batchDeleteTasks
+      tags:
+        - Tasks
+        - Batch Operations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 1
+                  maxItems: 100
+              required:
+                - ids
+      responses:
+        '200':
+          description: Tasks successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      deleted:
+                        type: integer
+                        example: 5
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/{id}:
+    get:
+      summary: Get a specific task
+      description: |
+        Retrieve a single task by ID.
+
+        **Response Caching**: Cached for 5 minutes.
+
+        **Rate Limiting**: Subject to read rate limit (100 requests per minute).
+      operationId: getTask
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved task
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      summary: Update a task
+      description: |
+        Update a single task. All fields are optional for partial updates.
+
+        **Rate Limiting**: Subject to write rate limit (30 requests per minute).
+
+        **Cache Invalidation**: Updates invalidate the cache for this task.
+      operationId: updateTask
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Task successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Delete a task
+      description: |
+        Delete a single task.
+
+        **Rate Limiting**: Subject to write rate limit (30 requests per minute).
+
+        **Cache Invalidation**: Deletion invalidates the cache.
+      operationId: deleteTask
+      tags:
+        - Tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      deleted:
+                        type: boolean
+                        example: true
+                      id:
+                        type: string
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/{id}/subtasks:
+    get:
+      summary: Get subtasks of a task
+      description: |
+        Retrieve all subtasks for a specific task.
+
+        **Response Caching**: Cached for 5 minutes.
+
+        **Rate Limiting**: Subject to read rate limit (100 requests per minute).
+      operationId: getSubtasks
+      tags:
+        - Tasks
+        - Subtasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Parent task ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved subtasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      subtasks:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Subtask'
+                      total:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create a subtask
+      description: |
+        Create a new subtask for a specific task.
+
+        **Rate Limiting**: Subject to write rate limit (30 requests per minute).
+      operationId: createSubtask
+      tags:
+        - Tasks
+        - Subtasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Parent task ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubtaskRequest'
+      responses:
+        '201':
+          description: Subtask successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Subtask'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from authentication provider (e.g., Supabase).
+
+        Include in requests as: `Authorization: Bearer <token>`
+
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique task identifier
+          example: "task-550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+          description: Task title
+          example: "Implement user authentication"
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          description: Detailed task description
+          example: "Set up JWT-based authentication with Supabase"
+        priority:
+          type: string
+          enum: [high, medium, low]
+          description: Task priority level
+          example: high
+        status:
+          type: string
+          enum: [pending, in-progress, done, review, deferred, cancelled]
+          description: Current task status
+          example: in-progress
+        parentTaskId:
+          type: string
+          description: ID of parent task (if subtask)
+          nullable: true
+          example: null
+        tags:
+          type: array
+          items:
+            type: string
+          description: Task tags for categorization
+          example: ["backend", "auth", "urgent"]
+        dueDate:
+          type: string
+          format: date-time
+          description: Task due date
+          nullable: true
+          example: "2024-12-31T23:59:59Z"
+        assignedTo:
+          type: string
+          description: User ID of assigned person
+          nullable: true
+          example: "user-123"
+        createdAt:
+          type: string
+          format: date-time
+          description: Task creation timestamp
+          example: "2024-11-12T00:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-11-12T12:00:00Z"
+        subtaskCount:
+          type: integer
+          description: Number of subtasks
+          example: 3
+      required:
+        - id
+        - title
+        - priority
+        - status
+        - createdAt
+        - updatedAt
+
+    CreateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Task title
+          example: "Implement user authentication"
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          description: Detailed task description
+          example: "Set up JWT-based authentication with Supabase"
+        priority:
+          type: string
+          enum: [high, medium, low]
+          description: Task priority level
+          default: medium
+          example: high
+        status:
+          type: string
+          enum: [pending, in-progress, done, review, deferred, cancelled]
+          description: Initial task status
+          default: pending
+        parentTaskId:
+          type: string
+          description: ID of parent task (if subtask)
+          example: null
+        tags:
+          type: array
+          items:
+            type: string
+          description: Task tags
+          default: []
+          example: ["backend", "auth"]
+        dueDate:
+          type: string
+          format: date-time
+          description: Task due date
+          example: "2024-12-31T23:59:59Z"
+        assignedTo:
+          type: string
+          description: User ID to assign task to
+          example: "user-123"
+      required:
+        - title
+
+    UpdateTaskRequest:
+      type: object
+      description: All fields are optional for partial updates
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [high, medium, low]
+        status:
+          type: string
+          enum: [pending, in-progress, done, review, deferred, cancelled]
+        tags:
+          type: array
+          items:
+            type: string
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+        assignedTo:
+          type: string
+          nullable: true
+
+    Subtask:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique subtask identifier
+        title:
+          type: string
+          description: Subtask title
+        status:
+          type: string
+          enum: [pending, in-progress, done, review, deferred, cancelled]
+          description: Subtask status
+        parentTaskId:
+          type: string
+          description: ID of parent task
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - parentTaskId
+        - createdAt
+        - updatedAt
+
+    CreateSubtaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Subtask title
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          description: Subtask description
+        status:
+          type: string
+          enum: [pending, in-progress, done, review, deferred, cancelled]
+          default: pending
+      required:
+        - title
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+          example: "Invalid request"
+        details:
+          type: object
+          description: Additional error details
+          example:
+            field: title
+            message: "Title is required"
+        requestId:
+          type: string
+          description: Unique request identifier for debugging
+          example: "req-1234567890-abcdefg"
+      required:
+        - success
+        - error
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Validation failed"
+            details:
+              field: "title"
+              message: "Title is required"
+
+    UnauthorizedError:
+      description: Unauthorized - invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Missing Authorization header"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Task not found"
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Rate limit exceeded"
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: Request limit per window
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Remaining requests in current window
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: Unix timestamp when rate limit resets
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Internal server error"
+            requestId: "req-1234567890-abcdefg"
+
+tags:
+  - name: Health
+    description: API health and status endpoints
+  - name: Tasks
+    description: Task management operations
+  - name: Subtasks
+    description: Subtask management operations
+  - name: Batch Operations
+    description: Batch operations for bulk task management

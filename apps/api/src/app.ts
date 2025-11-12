@@ -21,6 +21,7 @@ import {
 	readRateLimiter
 } from './middleware/rate-limit.middleware.js';
 import { cacheMiddleware, invalidateCacheMiddleware } from './middleware/cache.middleware.js';
+import { setupSwaggerUI } from './middleware/swagger.js';
 import { createTaskRouter } from './routes/tasks.routes.js';
 
 /**
@@ -57,6 +58,11 @@ export function createApp(tmCore?: TmCore): Express {
 
 	// Cache middleware for GET requests (before routes)
 	app.use(cacheMiddleware());
+
+	// === Documentation ===
+
+	// Setup Swagger UI (must come before route handlers)
+	setupSwaggerUI(app);
 
 	// === Routes ===
 
