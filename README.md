@@ -177,11 +177,14 @@ TAMP generate
 ### 📚 完整文档
 
 - **[官方文档网站](https://docs.task-master.dev)** - 详细的API参考和指南
+- **[阶段优化总结](docs/PHASE-OPTIMIZATION-SUMMARY.md)** - Phase 2/3 工作成果汇总
 
 ### 📖 快速参考
 
 - **[中文快速入门](docs/zh-cn/GETTING-STARTED-CN.md)** - 完整的中文教程
 - **[Claude Code集成](docs/zh-cn/CLAUDE-CN.md)** - Claude Code专项指南
+- [API文档](apps/api/API_DOCUMENTATION.md) - 完整的REST API参考
+- [Python SDK](packages/tm-python-sdk/README.md) - Python开发者指南
 - [命令参考](docs/command-reference.md) - 所有可用命令
 - [配置指南](docs/configuration.md) - 环境变量配置
 - [任务结构](docs/task-structure.md) - 理解任务格式
@@ -193,6 +196,76 @@ TAMP generate
 
 - [分支策略](docs/BRANCHES.md) - 项目分支说明
 - [项目演进](docs/architecture/PROJECT-EVOLUTION.md) - 功能发展历史
+
+---
+
+## 最新功能
+
+### 🐍 Python SDK (Phase 2)
+
+完整的Python SDK，使Python开发者能够轻松集成Task Master API。
+
+**功能特性：**
+- ✅ 完整的CRUD操作 (创建、读取、更新、删除)
+- ✅ 批量操作支持 (批量创建、更新、删除)
+- ✅ 自动JWT认证与刷新
+- ✅ 智能缓存（5分钟TTL）
+- ✅ 速率限制处理（指数退避）
+- ✅ 100%类型提示与IDE补全
+- ✅ 异步/同步双模式
+
+**快速开始：**
+```python
+from tm_sdk import TaskClient
+
+async with TaskClient(base_url="http://localhost:3000/api/v1") as client:
+    # 创建任务
+    task = await client.create_task({
+        "title": "实现用户认证",
+        "priority": "high"
+    })
+
+    # 列出任务
+    tasks = await client.list_tasks(status="in-progress")
+
+    # 更新任务状态
+    await client.update_task("task-1", {"status": "done"})
+```
+
+📖 [Python SDK 完整文档](packages/tm-python-sdk/README.md)
+
+### 📚 OpenAPI/Swagger 文档 (Phase 3)
+
+交互式API文档，开发者可以直观地浏览、测试所有API端点。
+
+**功能特性：**
+- ✅ 完整的OpenAPI 3.0规范 (1000+ 行)
+- ✅ 交互式Swagger UI界面
+- ✅ 所有11个端点的详细文档
+- ✅ 请求/响应示例（JavaScript、Python、cURL）
+- ✅ 内置尝试功能（Try It Out）
+- ✅ 多格式规范下载 (JSON/YAML)
+- ✅ 企业级文档（700+ 行）
+
+**访问方式：**
+```bash
+# 启动API服务
+cd apps/api && npm run dev
+
+# 在浏览器中打开Swagger UI
+http://localhost:3000/api/v1/docs
+```
+
+**获取规范：**
+```bash
+# 获取JSON格式
+curl http://localhost:3000/api/v1/docs/spec.json
+
+# 获取YAML格式
+curl http://localhost:3000/api/v1/docs/spec.yaml
+```
+
+📖 [API 完整文档](apps/api/API_DOCUMENTATION.md)
 
 ---
 
