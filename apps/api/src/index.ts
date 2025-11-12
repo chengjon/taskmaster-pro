@@ -4,8 +4,10 @@
  * Main entry point for the API server
  */
 
+import path from 'path';
 import { createApp, appConfig } from './app.js';
 import { logger } from './middleware/request-logger.js';
+import { cacheStore } from './middleware/cache.middleware.js';
 
 /**
  * Start the API server
@@ -24,6 +26,39 @@ async function startServer(): Promise<void> {
 		} catch (error) {
 			logger.warn('TmCore initialization failed, running in limited mode');
 			// Continue with undefined tmCore - controllers will use mock data
+		}
+
+		// Initialize FileWatcher for tasks.json to keep cache coherent with CLI changes
+		// This fixes Issue #2: Cache incoherence between CLI and API
+		try {
+			const { initializeTasksWatcher } = await import('@tm/core');
+			const tasksFilePath = path.join(process.cwd(), '.taskmaster/tasks/tasks.json');
+			const watcher = initializeTasksWatcher(tasksFilePath);
+
+			// Listen for file changes and invalidate cache
+			watcher.on('change', () => {
+				// Clear all task-related caches when file changes
+				const cleared = cacheStore.clearPattern('.*:GET:.*/tasks.*');
+				logger.info(
+					{ cleared, reason: 'tasks.json file changed' },
+					'Cache invalidated due to external file modification'
+				);
+			});
+
+			// Handle watcher errors
+			watcher.on('error', (error) => {
+				logger.warn(
+					{ error: error instanceof Error ? error.message : String(error) },
+					'FileWatcher error occurred'
+				);
+			});
+
+			logger.info('FileWatcher initialized for cache coherence');
+		} catch (error) {
+			logger.warn(
+				{ error: error instanceof Error ? error.message : String(error) },
+				'FileWatcher initialization failed, cache may become stale from CLI changes'
+			);
 		}
 
 		// Create Express app with optional tmCore
