@@ -1,5 +1,29 @@
 # taskmaster-pro
 
+## Unreleased
+
+### Major Changes
+
+- [#P0-1](https://github.com/chengjon/taskmaster-pro/pull/P0-1) **Fix API Mock Data**: Connect TaskService to real TmCore instead of returning hardcoded mock data
+  - API endpoints now return real task data from tasks.json
+  - Implemented fallback to mock data for backward compatibility
+  - All 7 task operation methods updated (get, list, create, update, delete, getSubtasks, createSubtask)
+  - **Impact**: API is now fully functional and returns real data
+
+- [#P0-2](https://github.com/chengjon/taskmaster-pro/pull/P0-2) **Fix Cache Incoherence**: Add FileWatcher for automatic cache invalidation
+  - Created new FileWatcher service in @tm/core for file system monitoring
+  - Detects when CLI modifies tasks.json and automatically invalidates API cache
+  - Uses EventEmitter pattern with debouncing (300ms delay, 100ms min interval)
+  - Integrated into API server startup for seamless operation
+  - **Impact**: CLI and API now show consistent data in real-time
+
+- [#P0-3](https://github.com/chengjon/taskmaster-pro/pull/P0-3) **Fix Concurrent Write Risk**: Add cross-process file locking
+  - Implemented acquireFileLock() with exclusive file creation (wx mode)
+  - Implemented releaseFileLock() with proper cleanup
+  - Combined with existing in-process locks for defense in depth
+  - 30-second timeout with 100ms retry interval prevents deadlocks
+  - **Impact**: Multiple processes can safely write to tasks.json without data corruption
+
 ## 0.31.2
 
 ### Patch Changes
