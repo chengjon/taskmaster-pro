@@ -174,6 +174,16 @@ TAMP generate
 
 ## 文档和资源
 
+### 🔧 架构审查与改进计划 (最新)
+
+最近完成了全面的架构审查，专注于 Claude Code 辅助工具的实际需求。包含 5 个关键问题的完整实现方案和 3 周执行计划。
+
+- **[执行摘要](EXECUTION_SUMMARY.md)** - 完整工作总结和快速导航 (推荐首先阅读)
+- **[修订评估总结](REVISED_ASSESSMENT_SUMMARY.md)** - 为什么不需要 Docker，以及重新调整的理由
+- **[关键修复实现计划](CRITICAL_FIXES_IMPLEMENTATION_PLAN.md)** - 5 个问题的代码示例和步骤化实现指南 (代码示例 400+ 行)
+- **[2025 路线图](ROADMAP_2025.md)** - 3 阶段战略计划和关键指标
+- **[快速开始指南](QUICK_START.md)** - 如何开始实现这些关键修复
+
 ### 📚 完整文档
 
 - **[官方文档网站](https://docs.task-master.dev)** - 详细的API参考和指南
