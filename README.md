@@ -181,6 +181,7 @@ TAMP generate
 
 ### 📖 快速参考
 
+- **[快速参考指南](docs/QUICK-REFERENCE.md)** - SDK和API使用速查表
 - **[中文快速入门](docs/zh-cn/GETTING-STARTED-CN.md)** - 完整的中文教程
 - **[Claude Code集成](docs/zh-cn/CLAUDE-CN.md)** - Claude Code专项指南
 - [API文档](apps/api/API_DOCUMENTATION.md) - 完整的REST API参考
